@@ -227,7 +227,7 @@ void IRQ_Handler(void) __irq
 		ucCOMIID0 = COMIID0;  // read serial port status register
 		if ((ucCOMIID0 & 0x2) == 0x2)	  	// Transmit buffer is empty
 		{
-		 fillBuf();  // send a byte if there's one to send
+			fillBuf();  // send a byte if there's one to send
 		}
 		if ((ucCOMIID0 & 0x4) == 0x4)	  			// Receive byte
 		{
