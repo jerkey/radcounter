@@ -45,47 +45,15 @@
 # include "stdio.h"
 # include "string.h"
 
-#define THERMOCOUPLE 	0						// Used for switching ADC0 to Thermocouple channel
-#define RTD 			1						// Used for switching ADC0 to RTD channel
-#define SAMPLENO		0x8					// Number of samples to be taken between channel switching
-
-// Thermocouple temperature constants
-#define TMINP 0  		// = minimum positive temperature in degC 
-#define TMAXP 350  		// = maximum positive temperature in degC
-#define VMINP 0  		// = input voltage in mV at 0 degC
-#define VMAXP 17.819  	// = input voltage in mV at 350 degC
-#define NSEGP 30  		// = number of sections in table
-#define VSEGP 0.59397  	// = (VMAX-VMIN)/NSEG = Voltage VSEG in mV of each segment
-
-#define TMINN 0  		// = minimum negative temperature in degC
-#define TMAXN -200  	// = maximum negative temperature in degC
-#define VMINN 0  		// = input voltage in mV at 0 degC
-#define VMAXN -5.603  	// = input voltage in mV at -200 degC
-#define NSEGN 20  		// = number of sections in table
-#define VSEGN -0.28015  // = (VMAX-VMIN)/NSEG = Voltage VSEG in mV of each segment
-
-// thermocouple lookup tables....
-const float C_themocoupleP[NSEGP+1] = {0.0, 	15.1417, 	29.8016, 	44.0289, 	57.8675, 	71.3563, 
-									84.5295, 	97.4175, 	110.047, 	122.441, 	134.62,		146.602, 
-									158.402, 	170.034, 	181.51, 	192.841, 	204.035, 	215.101, 
-									226.046, 	236.877, 	247.6,		258.221, 	268.745, 	279.177, 
-									289.522, 	299.784, 	309.969, 	320.079, 	330.119, 	340.092, 
-									350.001};
-const float C_themocoupleN[NSEGN+1] = {0.0,		-7.30137,	-14.7101,	-22.2655, 
-									-29.9855, 	-37.8791, 	-45.9548, 	-54.2258, 
-									-62.7115, 	-71.4378, 	-80.4368,	-89.7453, 
-									-99.4048, 	-109.463, 	-119.978, 	-131.025, 
-									-142.707, 	-155.173, 	-168.641, 	-183.422, 
-									-199.964};
-
 void ADC0Init(void);						
 void UARTInit(void);
 void SendString(void);							// Used to send strings to the UART
 void delay(int);								// Simple delay
 float CalculateRTDTemp (void);					// returns Thermistor Temperature reading
-float CalculateThermoCoupleTemp(void);			// returns Thermocouple Temperature reading
 void SystemZeroCalibration(void);				// Calibrate using external inputs
 void SystemFullCalibration(void);
+void fillBuf(void);  // put a character into serialport, update buffer indices
+void sendChar(char toSend);  // put a character into send buffer
 
 // global variable declarations....
 volatile unsigned char ucComRx = 0;				// variable that ComRx is read into in UART IRQ
@@ -111,7 +79,10 @@ float fVoltsBi, fVoltsUni;
 unsigned char i = 0;
 unsigned char nLen = 0;
 signed int j = 0;
-unsigned char sendBuf[512];
+unsigned char sendBuf[512];  // serial output buffer
+const int sendBufSize = 512; // serial output buffer size (for wrapping)
+int sendBufIndex = 0;				 // serial output buffer index used by sendChar
+int sendBufUartIndex = 0;	   // serial output buffer index used by UART IRQ handler
 
 int main(void)
 {		
@@ -129,8 +100,7 @@ int main(void)
 	ADC0CON = uADC0CONThermocouple ;	// Set ADC channel to Thermocouple				
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
 	ucRTDGain = 32;						 
-	ucADCInput = THERMOCOUPLE;			// Indicate that ADC0 is sampling thermocouple
-
+	
 	ADCMDE  = 0x81;					 	// Enable Continuous conversion mode
 	IRQEN = BIT10 + BIT11; 				// Enable ADC0 and UART interrupts
 	fVoltsUni = 1.2 / 16777216;			// Volts per ADC unit in Unipolar mode
@@ -198,29 +168,6 @@ float CalculateRTDTemp ()
   	return fresult;
 }
 
-float CalculateThermoCoupleTemp(void)
-{	
-	float fresult = 0;
-	float fMVthermocouple = fVThermocouple*1000;			//thermocouple voltage in mV
-	if (fMVthermocouple >= 0)
-	{
-  		j=(fMVthermocouple-VMINP)/VSEGP;       				// determine which coefficient to use
-  		if (j>NSEGP-1)     									// if input is over-range..
-    		j=NSEGP-1;            							// ..then use highest coefficients
-		
-		// Use the closest known temperature value and then use a linear approximation beetween the
-		// enclosing data points
-  		fresult = C_themocoupleP[j]+(fMVthermocouple-(VMINP+VSEGP*j))*(C_themocoupleP[j+1]-C_themocoupleP[j])/VSEGP;
-	}
-	else if (fMVthermocouple < 0)
-	{
-		j=(fMVthermocouple - VMINN) / VSEGN;       			// determine which coefficient to use
-		if (j>NSEGN-1)     									// if input is over-range..
-    		j=NSEGN-1;            							// ..then use highest coefficients
-		fresult = C_themocoupleN[j]+(fMVthermocouple-(VMINN+VSEGN*j))*(C_themocoupleN[j+1]-C_themocoupleN[j])/VSEGN;
-	} 
-   	return  fresult;
-}
 void ADC0Init()
 {
 	ADCMSKI = BIT0;						// Enable ADC0 result ready interrupt source
@@ -254,12 +201,20 @@ void SendString (void)
 {
    	for ( i = 0 ; i < nLen ; i++ )	// loop to send ADC0 result
 	{
- 		 COMTX = szTemp[i];
-  		 ucTxBufferEmpty = 0;
-  		 while (ucTxBufferEmpty == 0)
-  		 {
-  		 }
+ 		 sendChar(szTemp[i]);
 	}
+}
+void sendChar(char toSend)
+{
+	if (((sendBufIndex + 1) % sendBufSize) == sendBufUartIndex) return;  // buffer is full
+	sendBuf[sendBufIndex++] = toSend;
+	sendBufIndex %= sendBufSize; // wrap buffer index
+	if (0x020==(COMSTA0 & 0x020)) fillBuf();  //if we can send it now, otherwise wait for an IRQ
+}
+void fillBuf() {
+			if (sendBufUartIndex == sendBufIndex) return;  // nothing to send
+				COMTX = sendBuf[sendBufUartIndex++];  // send it
+				sendBufUartIndex %= sendBufSize; // wrap buffer index
 }
 void IRQ_Handler(void) __irq
 {
@@ -269,10 +224,10 @@ void IRQ_Handler(void) __irq
 	IRQSTATUS = IRQSTA;	   					// Read off IRQSTA register
 	if ((IRQSTATUS & BIT11) == BIT11)		//UART interrupt source
 	{
-		ucCOMIID0 = COMIID0;
-		if ((ucCOMIID0 & 0x2) == 0x2)	  	// Transmit buffer empty
+		ucCOMIID0 = COMIID0;  // read serial port status register
+		if ((ucCOMIID0 & 0x2) == 0x2)	  	// Transmit buffer is empty
 		{
-		  ucTxBufferEmpty = 1;
+		 fillBuf();  // send a byte if there's one to send
 		}
 		if ((ucCOMIID0 & 0x4) == 0x4)	  			// Receive byte
 		{
