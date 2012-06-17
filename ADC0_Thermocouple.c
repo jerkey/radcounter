@@ -52,7 +52,7 @@ void delay(int);								// Simple delay
 float CalculateRTDTemp (void);					// returns Thermistor Temperature reading
 void SystemZeroCalibration(void);				// Calibrate using external inputs
 void SystemFullCalibration(void);
-void fillBuf(void);  // put a character into serialport, update buffer indices
+void fillBuf(void);  // send a byte if there's one to send
 void sendChar(char toSend);  // put a character into send buffer
 
 // global variable declarations....
@@ -196,13 +196,9 @@ void UARTInit()
 	COMCON0 = BIT0 + BIT1 + BIT2;	// 8 data bits 2 stop bits
 	COMIEN0 = BIT0 + BIT1;	 	// Enable UART interrupts when Rx full and Tx buffer empty.	
 }
-
 void SendString (void)
 {
-   	for ( i = 0 ; i < nLen ; i++ )	// loop to send ADC0 result
-	{
- 		 sendChar(szTemp[i]);
-	}
+   	for ( i = 0 ; i < nLen ; i++ ) sendChar(szTemp[i]);
 }
 void sendChar(char toSend)
 {
@@ -211,7 +207,7 @@ void sendChar(char toSend)
 	sendBufIndex %= sendBufSize; // wrap buffer index
 	if (0x020==(COMSTA0 & 0x020)) fillBuf();  //if we can send it now, otherwise wait for an IRQ
 }
-void fillBuf() {
+void fillBuf() {  // send a byte if there's one to send
 			if (sendBufUartIndex == sendBufIndex) return;  // nothing to send
 				COMTX = sendBuf[sendBufUartIndex++];  // send it
 				sendBufUartIndex %= sendBufSize; // wrap buffer index
