@@ -20,7 +20,6 @@
 				 S4-5 to S4-8 	-	OFF
 *************************************************************************************************/
 // Bit Definitions
-#include <serial.c>
 #define BIT0  0x01
 #define BIT1  0x02
 #define BIT2  0x04
@@ -140,33 +139,15 @@ int main(void)
 	{
 	   	if (newADCdata == 1) 			// if new ADC data is available
 	   	{
-	   		if (ucADCInput == THERMOCOUPLE)					// If ADC is sampling thermocouple
-			{
 				fVThermocouple = lADC0_Thermocouple * fVoltsBi / ucThermocoupleGain;
 				newADCdata = 0;								// Indicate that data has been read
 				bSendResultToUART = 1;						// Now that both channels are sampled send result to UART
-/*				fTThermocouple = CalculateThermoCoupleTemp();
-				ADC0CON = uADC0CONRtd;					  	// Now Switch channel to RTD
-				ucADCInput = RTD;
-				ucSaveADCResult = 0x0;						// Reset counter*/
-			} 
-			else											// if ADC is sampling RTD
-			{
-				fVRTD = (ulADC0_RTD * fVoltsUni /ucRTDGain);
-				fTRTD = CalculateRTDTemp();
-				fFinalTemp = fTThermocouple	+ fTRTD;
-				newADCdata = 0;								// Indicate that data has been read
-				bSendResultToUART = 1;						// Now that both channels are sampled send result to UART
-				ADC0CON = uADC0CONThermocouple; 			// Switch channel back to Thermocouple
-				ucADCInput = THERMOCOUPLE;
-				ucSaveADCResult = 0x0;						// Reset counter
 			}
-	   	}
 	   	//delay (0x1FFF);
 		if (bSendResultToUART == 1) // Is there an ADC0 result ready for UART transmission?
 	   	{
 	   		bSendResultToUART = 0;
-//			sprintf ( (char*)szTemp, "Voltage : \t%+8.6fV \r\n",fVThermocouple );// Send the ADC0 Result to the UART                          
+//			sprintf ( (char*)szTemp, "Voltage : \t%+8.6ffV \r\n",fVThermocouple );// Send the ADC0 Result to the UART                          
 				sprintf ( (char*)szTemp, "%+8.6fV \r\n",fVThermocouple );
 				nLen = strlen((char*)szTemp);
      		if (nLen <64)	SendString();
@@ -284,8 +265,7 @@ void IRQ_Handler(void) __irq
 {
 	volatile unsigned long IRQSTATUS = 0;
 	unsigned char ucCOMIID0 = 0;
-	long ulADC0DAT = 0;
-
+	
 	IRQSTATUS = IRQSTA;	   					// Read off IRQSTA register
 	if ((IRQSTATUS & BIT11) == BIT11)		//UART interrupt source
 	{
@@ -303,20 +283,13 @@ void IRQ_Handler(void) __irq
 
 	if ((IRQSTATUS & BIT10) == BIT10)		//If ADC0 interrupt source
 	{
-	  	ulADC0DAT = ADC0DAT;
-		// if ADC data was previously read and this is the SAMPLENO sample
-  		if ((newADCdata==0) && (ucSaveADCResult == SAMPLENO)) 
-		{
-			if (ucADCInput == THERMOCOUPLE)
 				lADC0_Thermocouple = ADC0DAT;	// Read ADC0 conversion result
-			else
-				ulADC0_RTD = ADC0DAT; 			// Read ADC0 conversion result
 			newADCdata = 1;
   		}
 
  		ucSaveADCResult++;		
 	}
-}
+
 // Simple Delay routine
 void delay (int length)
 {
