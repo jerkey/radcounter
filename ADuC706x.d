@@ -1,0 +1,1 @@
+ADuC706x.o: ADuC706x.s
