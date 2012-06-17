@@ -1,23 +1,8 @@
 /************************************************************************************************
-
- Author        : ADI - Apps            www.analog.com/AduC7060
-
- Date          : November 2007
-
- File          : ADC_Cont.c
-
- Hardware      : ADuC706x
-
- Description   : This file expects a Thermocouple to be connected differentially to AIN2/AIN3.
+ This file expects a voltage to be connected differentially to AIN2/AIN3.
 				 The RTD connected to AIN0/AIN1 will be used for Cold Junction compensation.
 				 This file will measure the thermocouple/RTD inputs and send the measured voltages and
 				 temperature to the UART (9600 baud).
-				 To measure the RTD, the following switch settings must be in place:
-				 S4-1  			-	ON	
-				 S4-2  			-	ON
-				 S4-3  			-	ON
-				 S4-4  			- 	ON
-				 S4-5 to S4-8 	-	OFF
 *************************************************************************************************/
 // Bit Definitions
 #define BIT0  0x01
@@ -47,8 +32,8 @@
 
 void ADC0Init(void);						
 void UARTInit(void);
-void SendString(void);							// Used to send strings to the UART
-void delay(int);								// Simple delay
+void SendString(void);									// Used to send strings to the UART
+void delay(int);												// Simple delay
 float CalculateRTDTemp (void);					// returns Thermistor Temperature reading
 void SystemZeroCalibration(void);				// Calibrate using external inputs
 void SystemFullCalibration(void);
@@ -68,7 +53,6 @@ unsigned char newADCdata;          				// Used to indicate that new ADC data is 
 unsigned char ucWaitForUart = 0;				// Used to check that user has indicated that correct voltage was set 
 volatile long lADC0_Thermocouple = 0;			// Variable that ADC0DAT is read into, this is the ADC0 reading of the thermocouple
 volatile unsigned long ulADC0_RTD = 0;			// Variable that ADC0DAT is read into, this is the ADC0 reading of the RTD
-unsigned char ucSaveADCResult = 0x0;			// Counter used to indicate when to save the ADC0 reading
 unsigned char ucADCInput;						// Used to indicate what channel the ADC0 is sampling
 
 float Rrtd = 0.0;								// Resistance of RTD
@@ -203,29 +187,24 @@ void SendString (void)
 void sendChar(char toSend)
 {
 	if (((sendBufIndex + 1) % sendBufSize) == sendBufUartIndex) return;  // buffer is full
-	sendBuf[sendBufIndex++] = toSend;
-	sendBufIndex %= sendBufSize; // wrap buffer index
-	if (0x020==(COMSTA0 & 0x020)) fillBuf();  //if we can send it now, otherwise wait for an IRQ
+	sendBuf[sendBufIndex++] = toSend;  // put the char in the buffer and ++ the index
+	sendBufIndex %= sendBufSize; // wrap buffer index if needed
+	if (0x020==(COMSTA0 & 0x020)) fillBuf();  //if we can, send it now.
 }
 void fillBuf() {  // send a byte if there's one to send
 			if (sendBufUartIndex == sendBufIndex) return;  // nothing to send
-				COMTX = sendBuf[sendBufUartIndex++];  // send it
-				sendBufUartIndex %= sendBufSize; // wrap buffer index
+				COMTX = sendBuf[sendBufUartIndex++];  // send the next char and ++ the index
+				sendBufUartIndex %= sendBufSize; // wrap buffer index if needed
 }
 void IRQ_Handler(void) __irq
 {
-	volatile unsigned long IRQSTATUS = 0;
-	unsigned char ucCOMIID0 = 0;
-	
-	IRQSTATUS = IRQSTA;	   					// Read off IRQSTA register
+	volatile unsigned long IRQSTATUS = IRQSTA;	   					// Read off IRQSTA register
 	if ((IRQSTATUS & BIT11) == BIT11)		//UART interrupt source
 	{
-		ucCOMIID0 = COMIID0;  // read serial port status register
+	  unsigned char ucCOMIID0 = COMIID0;  // read serial port status register
 		if ((ucCOMIID0 & 0x2) == 0x2)	  	// Transmit buffer is empty
-		{
 			fillBuf();  // send a byte if there's one to send
-		}
-		if ((ucCOMIID0 & 0x4) == 0x4)	  			// Receive byte
+		if ((ucCOMIID0 & 0x4) == 0x4)	  			// A byte has been received
 		{
 			ucComRx	= COMRX;
 			ucWaitForUart = 0;
@@ -233,12 +212,10 @@ void IRQ_Handler(void) __irq
 	}
 
 	if ((IRQSTATUS & BIT10) == BIT10)		//If ADC0 interrupt source
-	{
-				lADC0_Thermocouple = ADC0DAT;	// Read ADC0 conversion result
-			newADCdata = 1;
-  		}
-
- 		ucSaveADCResult++;		
+		{
+		lADC0_Thermocouple = ADC0DAT;	// Read ADC0 conversion result
+		newADCdata = 1;
+  	}
 	}
 
 // Simple Delay routine
