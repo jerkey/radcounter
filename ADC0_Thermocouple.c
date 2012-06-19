@@ -73,15 +73,17 @@ int main(void)
 	POWKEY1 = 0x1;
 	POWCON0 = 0x78;		   				// Set core to max CPU speed of 10.24Mhz
 	POWKEY2 = 0xF4;
-	IEXCON = 0x42; 						// Enable Excitation Current Source 0 - 200uA
-	DACCON = 0x10;						// Enable DAC with internal reference
-	DACDAT = ((0xB55)<< 16);			// Set DAC to 850 mV which is used bias negative input of thermocouple
+//	IEXCON = 0x42; 						// Enable Excitation Current Source 0 - 200uA
+//	DACCON = 0x10;						// Enable DAC with internal reference
+//	DACDAT = ((0xB55)<< 16);			// Set DAC to 850 mV which is used bias negative input of thermocouple
 	UARTInit();							// Init UART
 	IRQEN = BIT11;						// Enable UART interrupt
 	ADC0Init();							// Init ADC0
 	uADC0CONRtd = 0x8415;				// Gain = 32, Unipolar, enable ADC0, Ext ref, ADC0/1 differential
 	uADC0CONThermocouple = 0x8145;		// Gain = 32, Bipolar, enable ADC0, Int ref, ADC2/3 differential
-	ADC0CON = uADC0CONThermocouple ;	// Set ADC channel to Thermocouple				
+	// bit 15 = ADC ON, 14:13 current source 00, 12 HIGHEXTREF, 11 AMP_CM, 10 unipolar, 9:6 input select,
+	// bit 5:4 reference select, 3:0 PGA gain select 0000=gain of 1.  page 45 of PDF
+	ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
 	ucRTDGain = 32;						 
 	
