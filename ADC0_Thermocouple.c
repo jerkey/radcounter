@@ -84,13 +84,15 @@ int main(void)
 	// bit 15 = ADC ON, 14:13 current source 00, 12 HIGHEXTREF, 11 AMP_CM, 10 unipolar, 9:6 input select,
 	// bit 5:4 reference select, 3:0 PGA gain select 0000=gain of 1.  page 45 of PDF
 	ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
+	ADC0CON = BIT15 + BIT10 + BIT8 + BIT6;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
 	ucRTDGain = 32;						 
 	
-	ADCMDE  = 0x81;					 	// Enable Continuous conversion mode
+	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullspeed, bits 2:0 = 001 continous conversion mode
 	IRQEN = BIT10 + BIT11; 				// Enable ADC0 and UART interrupts
-	fVoltsUni = 1.2 / 16777216;			// Volts per ADC unit in Unipolar mode
-	fVoltsBi = 2.4 / 16777216;			// Volts per ADC unit in Biipolar mode
+	fVoltsUni = 1.2 / 16777216;		// Volts per ADC unit in Unipolar mode
+	fVoltsBi = 2.4 / 16777216;		// Volts per ADC unit in Biipolar mode
+
 	while (1)
 	{
 	   	if (newADCdata == 1) 			// if new ADC data is available
