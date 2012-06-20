@@ -77,19 +77,19 @@ int main(void)
 //	DACCON = 0x10;						// Enable DAC with internal reference
 //	DACDAT = ((0xB55)<< 16);			// Set DAC to 850 mV which is used bias negative input of thermocouple
 	UARTInit();							// Init UART
-	IRQEN = BIT11;						// Enable UART interrupt
 	ADC0Init();							// Init ADC0
-	uADC0CONRtd = 0x8415;				// Gain = 32, Unipolar, enable ADC0, Ext ref, ADC0/1 differential
-	uADC0CONThermocouple = 0x8145;		// Gain = 32, Bipolar, enable ADC0, Int ref, ADC2/3 differential
+	IRQEN = BIT11 + BIT10;						// Enable UART interrupt (BIT11) and ADC0 interrupt (BIT10)
+	
+	// uADC0CONRtd = 0x8415;				// Gain = 32, Unipolar, enable ADC0, Ext ref, ADC0/1 differential
+	// uADC0CONThermocouple = 0x8145;		// Gain = 32, Bipolar, enable ADC0, Int ref, ADC2/3 differential
 	// bit 15 = ADC ON, 14:13 current source 00, 12 HIGHEXTREF, 11 AMP_CM, 10 unipolar, 9:6 input select,
 	// bit 5:4 reference select, 3:0 PGA gain select 0000=gain of 1.  page 45 of PDF
-	ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
+	// ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
 	ADC0CON = BIT15 + BIT10 + BIT8 + BIT6;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
+	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullspeed, bits 2:0 = 001 continous conversion mode
+	
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
 	ucRTDGain = 32;						 
-	
-	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullspeed, bits 2:0 = 001 continous conversion mode
-	IRQEN = BIT10 + BIT11; 				// Enable ADC0 and UART interrupts
 	fVoltsUni = 1.2 / 16777216;		// Volts per ADC unit in Unipolar mode
 	fVoltsBi = 2.4 / 16777216;		// Volts per ADC unit in Biipolar mode
 
