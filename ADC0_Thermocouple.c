@@ -97,7 +97,7 @@ int main(void)
 	{
 	   	if (newADCdata == 1) 			// if new ADC data is available
 	   	{
-				fVThermocouple = lADC0_Thermocouple * fVoltsBi / ucThermocoupleGain;
+				fVThermocouple = lADC0_Thermocouple * fVoltsUni;
 				newADCdata = 0;								// Indicate that data has been read
 //			sprintf ( (char*)szTemp, "Voltage : \t%+8.6ffV \r\n",fVThermocouple );// Send the ADC0 Result to the UART                          
 				sprintf ( (char*)szTemp, "%+8.6fV \r\n",fVThermocouple );
@@ -111,9 +111,9 @@ int main(void)
 void ADC0Init()
 {
 	ADCMSKI = BIT0;						// Enable ADC0 result ready interrupt source
-  	// ADCFLT = 0xFF1F;					// Chop on, Averaging, AF=63, SF=31, 4Hz					
-		ADCFLT = BIT14;  // Bit 14 = RAVG2 running average /2, sample rate = 8kHz
-  	ADCCFG = 0;
+  // ADCFLT = 0xFF1F;					// Chop on, Averaging, AF=63, SF=31, 4Hz					
+	ADCFLT = BIT14;  // Bit 14 = RAVG2 running average /2, sample rate = 8kHz
+ 	ADCCFG = 0;
 	//ADC0CON = 0x8145;					// For system calibration set the gain that will be used
 										// for measurements to ensure the best calibration is achieved,
 										// In this case gain is 32 therefore Full Scale is 0.0375v
