@@ -103,6 +103,7 @@ int main(void)
 				sprintf ( (char*)szTemp, "%+8.6fV \r\n",fVThermocouple );
 				nLen = strlen((char*)szTemp);
      		if (nLen <64)	SendString();
+				delay(10000);
    		}
 	}
 }
