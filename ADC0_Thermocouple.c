@@ -173,9 +173,17 @@ void UARTInit()
 // Initialize the UART for 9600-8-N
 	GP1CON = 0x11;  			// Select UART functionality for P1.0/P1.1
 	COMCON0 = 0x80;				// Enable access to COMDIV registers
-	COMDIV0 = 0x21;				// Set baud rate to 9600.
-	COMDIV1 = 0x00;
-
+	// baud rate = 320000 / ( DL * (M + (N / 2048)))
+	// 9600 baud => DL = 0x21, M = 1, N = 21
+	// 19200 baud => DL = 0x10, M = 1, N = 85
+	// 115200 baud => DL = 0x2, M = 1, N = 796
+	COMDIV0 = 0x10;				// DL low byte (Divisor Latch)
+	COMDIV1 = 0x00;				// DL high byte (Divisor Latch)
+	// COMDIV2 Bit 15 = Fractional Baud enable, 4 minus bits 12:11 is M, bits 10:0 = N (page 80)
+	// COMDIV2 = BIT15 + BIT12 + BIT11 + 21;	  // 9600 baud if COMDIV = 0x21
+	COMDIV2 = BIT15 + BIT12 + BIT11 + 85;	  // 19200 baud if COMDIV = 0x10
+	// COMDIV2 = BIT15 + BIT12 + BIT11 + 796;	  // 115200 baud if COMDIV = 0x2
+	
 	COMCON0 = BIT0 + BIT1 + BIT2;	// 8 data bits 2 stop bits
 	COMIEN0 = BIT0 + BIT1;	 	// Enable UART interrupts when Rx full and Tx buffer empty.	
 }
