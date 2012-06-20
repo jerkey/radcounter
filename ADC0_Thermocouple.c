@@ -177,11 +177,11 @@ void UARTInit()
 	// 9600 baud => DL = 0x21, M = 1, N = 21
 	// 19200 baud => DL = 0x10, M = 1, N = 85
 	// 115200 baud => DL = 0x2, M = 1, N = 796
-	COMDIV0 = 0x21;				// DL low byte (Divisor Latch)
+	COMDIV0 = 0x10;				// DL low byte (Divisor Latch)
 	COMDIV1 = 0x00;				// DL high byte (Divisor Latch)
 	// COMDIV2 Bit 15 = Fractional Baud enable, bits 12:11 is M (00=4), bits 10:0 = N (page 80)
-	COMDIV2 = BIT15 + BIT11 + 21;	  // 9600 baud if COMDIV = 0x21
-	// COMDIV2 = BIT15 + BIT11 + 85;	  // 19200 baud if COMDIV = 0x10
+	// COMDIV2 = BIT15 + BIT11 + 21;	  // 9600 baud if COMDIV = 0x21
+	COMDIV2 = BIT15 + BIT11 + 85;	  // 19200 baud if COMDIV = 0x10
 	// COMDIV2 = BIT15 + BIT11 + 796;	  // 115200 baud if COMDIV = 0x2
 	
 	COMCON0 = BIT0 + BIT1 + BIT2;	// 8 data bits 2 stop bits
