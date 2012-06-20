@@ -86,7 +86,7 @@ int main(void)
 	// bit 5:4 reference select, 3:0 PGA gain select 0000=gain of 1.  page 45 of PDF
 	// ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
 	ADC0CON = BIT15 + BIT10 + BIT8 + BIT6;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
-	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullspeed, bits 2:0 = 001 continous conversion mode
+	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullpower, bits 2:0 = 001 continous conversion mode
 	
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
 	ucRTDGain = 32;						 
@@ -153,7 +153,8 @@ float CalculateRTDTemp ()
 void ADC0Init()
 {
 	ADCMSKI = BIT0;						// Enable ADC0 result ready interrupt source
-  	ADCFLT = 0xFF1F;					// Chop on, Averaging, AF=63, SF=31, 4Hz							    
+  	// ADCFLT = 0xFF1F;					// Chop on, Averaging, AF=63, SF=31, 4Hz					
+		ADCFLT = BIT14;  // Bit 14 = RAVG2 running average /2, sample rate = 8kHz
   	ADCCFG = 0;
 	//ADC0CON = 0x8145;					// For system calibration set the gain that will be used
 										// for measurements to ensure the best calibration is achieved,
