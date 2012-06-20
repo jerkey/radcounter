@@ -99,12 +99,6 @@ int main(void)
 	   	{
 				fVThermocouple = lADC0_Thermocouple * fVoltsBi / ucThermocoupleGain;
 				newADCdata = 0;								// Indicate that data has been read
-				bSendResultToUART = 1;						// Now that both channels are sampled send result to UART
-			}
-	   	//delay (0x1FFF);
-		if (bSendResultToUART == 1) // Is there an ADC0 result ready for UART transmission?
-	   	{
-	   		bSendResultToUART = 0;
 //			sprintf ( (char*)szTemp, "Voltage : \t%+8.6ffV \r\n",fVThermocouple );// Send the ADC0 Result to the UART                          
 				sprintf ( (char*)szTemp, "%+8.6fV \r\n",fVThermocouple );
 				nLen = strlen((char*)szTemp);
