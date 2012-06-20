@@ -108,49 +108,6 @@ int main(void)
 	}
 }
 
-void SystemZeroCalibration(void)
-{
-	
-	ucWaitForUart = 1;
-	sprintf ( (char*)szTemp, "Set Zero Scale Voltage - Press return when ready \r\n");                         
-	nLen = strlen((char*)szTemp);
- 	if (nLen <64)
-		 	SendString();
-	while (ucWaitForUart == 1)
-	{}
-	ADCMDE	= 0x96;							// ADC System Zero scale calibration
-	while ((ADCSTA & BIT15) != BIT15)		// bit 15 set by adc when calibration is complete
-	{}
-}
-void SystemFullCalibration(void)
-{
-	ucWaitForUart = 1;
-	sprintf ( (char*)szTemp, "Set Full Scale Voltage (0.0375) - Press return when ready \r\n");                         
-	nLen = strlen((char*)szTemp);
- 	if (nLen <64)
-		 	SendString();
-	while (ucWaitForUart == 1)
-	{}
-	ADCMDE	= 0x97;							// ADC System Full scale calibration
-	while ((ADCSTA & BIT15) != BIT15)		// bit 15 set by adc when calibration is complete
-	{}
-}
-
-float CalculateRTDTemp ()
-{
-  	float fresult;
-  
-  	// First calculate the resistance across the RTD
-  	// Equation = ADC0Result * ((RREF/Gain)/# of bits)
-  	Rrtd = (float)ulADC0_RTD * ((5600.0 /ucRTDGain) /0xFFFFFF);
-
-  	// Next the temperature value is calculated using Rtd resistance
-  	// Simple Linear equation:
-  	// At 35 degree Celsius, the equivalent resistance of a PT100 is 113.607 Ohm.
-  	fresult = (Rrtd - 100.0) * (35.0/13.607);
-  	return fresult;
-}
-
 void ADC0Init()
 {
 	ADCMSKI = BIT0;						// Enable ADC0 result ready interrupt source
@@ -231,5 +188,48 @@ void delay (int length)
 {
 	while (length >0)
     	length--;
+}
+
+void SystemZeroCalibration(void)
+{
+	
+	ucWaitForUart = 1;
+	sprintf ( (char*)szTemp, "Set Zero Scale Voltage - Press return when ready \r\n");                         
+	nLen = strlen((char*)szTemp);
+ 	if (nLen <64)
+		 	SendString();
+	while (ucWaitForUart == 1)
+	{}
+	ADCMDE	= 0x96;							// ADC System Zero scale calibration
+	while ((ADCSTA & BIT15) != BIT15)		// bit 15 set by adc when calibration is complete
+	{}
+}
+void SystemFullCalibration(void)
+{
+	ucWaitForUart = 1;
+	sprintf ( (char*)szTemp, "Set Full Scale Voltage (0.0375) - Press return when ready \r\n");                         
+	nLen = strlen((char*)szTemp);
+ 	if (nLen <64)
+		 	SendString();
+	while (ucWaitForUart == 1)
+	{}
+	ADCMDE	= 0x97;							// ADC System Full scale calibration
+	while ((ADCSTA & BIT15) != BIT15)		// bit 15 set by adc when calibration is complete
+	{}
+}
+
+float CalculateRTDTemp ()
+{
+  	float fresult;
+  
+  	// First calculate the resistance across the RTD
+  	// Equation = ADC0Result * ((RREF/Gain)/# of bits)
+  	Rrtd = (float)ulADC0_RTD * ((5600.0 /ucRTDGain) /0xFFFFFF);
+
+  	// Next the temperature value is calculated using Rtd resistance
+  	// Simple Linear equation:
+  	// At 35 degree Celsius, the equivalent resistance of a PT100 is 113.607 Ohm.
+  	fresult = (Rrtd - 100.0) * (35.0/13.607);
+  	return fresult;
 }
 
