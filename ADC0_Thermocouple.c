@@ -101,7 +101,7 @@ int main(void)
 				newADCdata = 0;								// Indicate that data has been read
 //			sprintf ( (char*)szTemp, "Voltage : \t%+8.6ffV \r\n",fVThermocouple );// Send the ADC0 Result to the UART                          
 //				sprintf ( (char*)szTemp, "%+8.6fV \r\n",fVThermocouple );
-				sprintf((char*)szTemp, "%08.8LX\r\n",lADC0_Thermocouple );  // pad left with zeroes, 8 width, 8 precision, Long Double, HEX
+				sprintf((char*)szTemp, "%06.6LX\r\n",lADC0_Thermocouple );  // pad left with zeroes, 8 width, 8 precision, Long Double, HEX
 				nLen = strlen((char*)szTemp);
      		if (nLen <64)	SendString();
 				delay(10000);
