@@ -1,8 +1,7 @@
 /************************************************************************************************
- This file expects a voltage to be connected differentially to AIN2/AIN3.
-				 The RTD connected to AIN0/AIN1 will be used for Cold Junction compensation.
-				 This file will measure the thermocouple/RTD inputs and send the measured voltages and
-				 temperature to the UART (9600 baud).
+ This file expects a voltage between 0 and 1.20V to be connected differentially to AIN3/AIN2.
+				 This file will measure the voltage between AIN3 (pin 8) as - and AIN2 (pin 9) as +
+				 and send the measured voltage to the UART (115200 baud).
 *************************************************************************************************/
 // Bit Definitions
 #define BIT0  0x01
