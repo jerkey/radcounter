@@ -85,7 +85,7 @@ int main(void)
 	// bit 15 = ADC ON, 14:13 current source 00, 12 HIGHEXTREF, 11 AMP_CM, 10 unipolar, 9:6 input select,
 	// bit 5:4 reference select, 3:0 PGA gain select 0000=gain of 1.  page 45 of PDF
 	// ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
-	ADC0CON = BIT15 + BIT10 + BIT8 + BIT6;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
+	ADC0CON = BIT15 + BIT8 + BIT6 + BIT4 + BIT5;	//  ADC on, ADC2/ADC3 (differential mode), Vdd/2 ref, gain = 1
 	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullpower, bits 2:0 = 001 continous conversion mode
 	
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
@@ -101,12 +101,12 @@ int main(void)
 				newADCdata = 0;								// Indicate that data has been read
 //			sprintf ( (char*)szTemp, "Voltage : \t%+8.6ffV \r\n",fVThermocouple );// Send the ADC0 Result to the UART                          
 //				sprintf ( (char*)szTemp, "%+8.6fV \r\n",fVThermocouple );
-				sprintf((char*)szTemp, "%06.6LX\r\n",lADC0_Thermocouple );  // pad left with zeroes, 6 width, 6 precision, Long Double, HEX
+				sprintf((char*)szTemp, "%07.7LX\r\n",lADC0_Thermocouple );  // pad left with zeroes, 6 width, 6 precision, Long Double, HEX
 				nLen = strlen((char*)szTemp);
      		if (nLen <64)	SendString();
-				sprintf((char*)szTemp, "123456r\n");
-				nLen = strlen((char*)szTemp);
-     		if (nLen <64)	SendString();
+//				sprintf((char*)szTemp, "123456r\n");
+//				nLen = strlen((char*)szTemp);
+//     		if (nLen <64)	SendString();
 				delay(100000);
    		}
 	}
@@ -117,8 +117,9 @@ void ADC0Init()
 	ADCMSKI = BIT0;						// Enable ADC0 result ready interrupt source
   // ADCFLT = 0xFF1F;					// Chop on, Averaging, AF=63, SF=31, 4Hz					
 //	ADCFLT = BIT14;  // Bit 14 = RAVG2 running average /2, sample rate = 8kHz
-	ADCFLT = 64;  // Sinc3 factor of 64, chop off, ravg2 off
+	ADCFLT = 7;  //		Sinc3 factor of 64, chop off, ravg2 off
 	
+	ADCORCR = 3;
  	ADCCFG = 0;
 	//ADC0CON = 0x8145;					// For system calibration set the gain that will be used
 										// for measurements to ensure the best calibration is achieved,
