@@ -85,7 +85,7 @@ int main(void)
 	// bit 15 = ADC ON, 14:13 current source 00, 12 HIGHEXTREF, 11 AMP_CM, 10 unipolar, 9:6 input select,
 	// bit 5:4 reference select, 3:0 PGA gain select 0000=gain of 1.  page 45 of PDF
 	// ADC0CON = 0x8540 ;	//  ADC on, ADC2/ADC3 (differential mode), Int ref, gain = 1
-	ADC0CON = BIT15 + BIT8 + BIT6 + BIT4 + BIT5;	//  ADC on, ADC2/ADC3 (differential mode), Vdd/2 ref, gain = 1
+	ADC0CON = BIT15 + BIT10 + BIT8 + BIT6 + BIT4 + BIT5;	//  ADC on, ADC2/ADC3 (differential mode), Vdd/2 ref, gain = 1
 	ADCMDE  = 0x81;								// ADCMDE bit 7 = fullpower, bits 2:0 = 001 continous conversion mode
 	
 	ucThermocoupleGain = 32;			// Need to change these values according to the PGA gain set in ADC0CON
