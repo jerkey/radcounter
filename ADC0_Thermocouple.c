@@ -39,6 +39,7 @@ void SystemFullCalibration(void);
 void fillBuf(void);  // send a byte if there's one to send
 void sendChar(char toSend);  // put a character into send buffer
 
+
 // global variable declarations....
 volatile unsigned char ucComRx = 0;				// variable that ComRx is read into in UART IRQ
 unsigned uADC0CONThermocouple;	 				// used to set ADC0CON which sets channel to thermocouple
@@ -103,7 +104,10 @@ int main(void)
 				sprintf((char*)szTemp, "%06.6LX\r\n",lADC0_Thermocouple );  // pad left with zeroes, 6 width, 6 precision, Long Double, HEX
 				nLen = strlen((char*)szTemp);
      		if (nLen <64)	SendString();
-				delay(10000);
+				sprintf((char*)szTemp, "123456r\n");
+				nLen = strlen((char*)szTemp);
+     		if (nLen <64)	SendString();
+				delay(100000);
    		}
 	}
 }
@@ -112,7 +116,9 @@ void ADC0Init()
 {
 	ADCMSKI = BIT0;						// Enable ADC0 result ready interrupt source
   // ADCFLT = 0xFF1F;					// Chop on, Averaging, AF=63, SF=31, 4Hz					
-	ADCFLT = BIT14;  // Bit 14 = RAVG2 running average /2, sample rate = 8kHz
+//	ADCFLT = BIT14;  // Bit 14 = RAVG2 running average /2, sample rate = 8kHz
+	ADCFLT = 64;  // Sinc3 factor of 64, chop off, ravg2 off
+	
  	ADCCFG = 0;
 	//ADC0CON = 0x8145;					// For system calibration set the gain that will be used
 										// for measurements to ensure the best calibration is achieved,
@@ -167,8 +173,9 @@ void IRQ_Handler(void) __irq
 	if ((IRQSTATUS & BIT11) == BIT11)		//UART interrupt source
 	{
 	  unsigned char ucCOMIID0 = COMIID0;  // read serial port status register
-		if ((ucCOMIID0 & 0x2) == 0x2)	  	// Transmit buffer is empty
-			fillBuf();  // send a byte if there's one to send
+		//if ((ucCOMIID0 & 0x2) == 0x2)	  	// Transmit buffer is empty
+		if (0x020==(COMSTA0 & 0x020))
+		fillBuf();  // send a byte if there's one to send
 		if ((ucCOMIID0 & 0x4) == 0x4)	  			// A byte has been received
 		{
 			ucComRx	= COMRX;
