@@ -1,4 +1,0 @@
---cpu ARM7TDMI "aduc706x.o" "adc0_thermocouple.o" "irq_arm.o" --strict --scatter "arm-rad1.sct" 
---summary_stderr --info summarysizes --map --xref --callgraph --symbols 
---info sizes --info totals --info unused --info veneers 
- --list ".\arm-rad1.map" -o "arm-rad1.axf"
