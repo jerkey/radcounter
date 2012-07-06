@@ -22,3 +22,5 @@
 *.Administrator
 *.lnp
 *.bak
+*.lst
+.sct
